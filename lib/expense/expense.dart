@@ -1,9 +1,10 @@
-// ignore_for_file: use_key_in_widget_constructors, library_private_types_in_public_api, prefer_const_constructors, prefer_const_constructors_in_immutables
+// ignore_for_file: unused_local_variable, prefer_const_constructors, library_private_types_in_public_api, use_key_in_widget_constructors, prefer_const_constructors_in_immutables
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ExpenseApp extends StatelessWidget {
   @override
@@ -36,6 +37,11 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
     super.dispose();
   }
 
+  String? _getUserUID() {
+    final user = FirebaseAuth.instance.currentUser;
+    return user?.uid;
+  }
+
   void _addExpense() {
     final title = _titleController.text;
     final amount = double.tryParse(_amountController.text);
@@ -44,12 +50,15 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
       final now = DateTime.now();
       final month = DateFormat('MMMM yyyy').format(now);
 
-      _firestore.collection('expenses').add({
-        'title': title,
-        'amount': amount,
-        'date': now,
-        'month': month,
-      });
+      final uid = _getUserUID();
+      if (uid != null) {
+        _firestore.collection('users').doc(uid).collection('expenses').add({
+          'title': title,
+          'amount': amount,
+          'date': now,
+          'month': month,
+        });
+      }
 
       _titleController.clear();
       _amountController.clear();
@@ -57,7 +66,10 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
   }
 
   void _removeExpense(String expenseId) {
-    _firestore.collection('expenses').doc(expenseId).delete();
+    final uid = _getUserUID();
+    if (uid != null) {
+      _firestore.collection('users').doc(uid).collection('expenses').doc(expenseId).delete();
+    }
   }
 
   @override
@@ -81,17 +93,17 @@ class _ExpenseHomePageState extends State<ExpenseHomePage> {
             child: ExpenseList(
               firestore: _firestore,
               removeExpense: _removeExpense,
+              userUID: _getUserUID(),
             ),
           ),
-          TotalExpense(firestore: _firestore),
+          TotalExpense(firestore: _firestore, userUID: _getUserUID()),
           ElevatedButton(
             child: Text('View Weekly Report'),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      WeeklyExpensePage(firestore: _firestore),
+                  builder: (context) => WeeklyExpensePage(firestore: _firestore, userUID: _getUserUID()),
                 ),
               );
             },
@@ -122,7 +134,6 @@ class ExpenseForm extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               TextField(
                 controller: titleController,
@@ -130,12 +141,12 @@ class ExpenseForm extends StatelessWidget {
               ),
               TextField(
                 controller: amountController,
-                decoration: InputDecoration(labelText: 'Amount (Tshs)'),
                 keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Amount'),
               ),
               ElevatedButton(
-                child: Text('Add Expense'),
                 onPressed: () => addExpense(),
+                child: Text('Add Expense'),
               ),
             ],
           ),
@@ -148,44 +159,38 @@ class ExpenseForm extends StatelessWidget {
 class ExpenseList extends StatelessWidget {
   final FirebaseFirestore firestore;
   final Function removeExpense;
+  final String? userUID;
 
-  ExpenseList({
-    required this.firestore,
-    required this.removeExpense,
-  });
+  ExpenseList({required this.firestore, required this.removeExpense, required this.userUID});
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: firestore.collection('expenses').snapshots(),
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-
+      stream: firestore.collection('users').doc(userUID).collection('expenses').snapshots(),
+      builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(),
+          );
         }
 
-        final expenses = snapshot.data!.docs;
-
-        if (expenses.isEmpty) {
-          return Center(child: Text('No expenses added yet.'));
-        }
+        final expenseDocs = snapshot.data?.docs ?? [];
 
         return ListView.builder(
-          itemCount: expenses.length,
-          itemBuilder: (BuildContext context, int index) {
-            final expense = expenses[index];
+          itemCount: expenseDocs.length,
+          itemBuilder: (context, index) {
+            final doc = expenseDocs[index];
+            final expenseId = doc.id;
+            final title = doc['title'];
+            final amount = doc['amount'];
+            final date = (doc['date'] as Timestamp).toDate();
 
-            return ListTile(
-              title: Text(expense['title']),
-              subtitle: Text(
-                'Amount: Tshs ${expense['amount'].toStringAsFixed(2)}',
-              ),
-              trailing: IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () => removeExpense(expense.id),
+            return Card(
+              child: ListTile(
+                title: Text(title),
+                subtitle: Text('Amount: \$${amount.toStringAsFixed(2)}'),
+                trailing: Text(DateFormat('MMM d, y').format(date)),
+                onLongPress: () => removeExpense(expenseId),
               ),
             );
           },
@@ -197,33 +202,32 @@ class ExpenseList extends StatelessWidget {
 
 class TotalExpense extends StatelessWidget {
   final FirebaseFirestore firestore;
+  final String? userUID;
 
-  TotalExpense({
-    required this.firestore,
-  });
+  TotalExpense({required this.firestore, required this.userUID});
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: firestore.collection('expenses').snapshots(),
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-
+      stream: firestore.collection('users').doc(userUID).collection('expenses').snapshots(),
+      builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return CircularProgressIndicator();
         }
 
-        final expenses = snapshot.data!.docs;
-        final totalExpense = expenses.fold(0.0, (sum, doc) => sum + doc['amount']);
+        final expenseDocs = snapshot.data?.docs ?? [];
+        double totalExpense = 0;
 
-        return Container(
-          padding: EdgeInsets.all(10.0),
-          alignment: Alignment.centerRight,
+        for (final doc in expenseDocs) {
+          final amount = doc['amount'] as double;
+          totalExpense += amount;
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
           child: Text(
-            'Total Expense: Tshs ${totalExpense.toStringAsFixed(2)}',
-            style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+            'Total Expense: \$${totalExpense.toStringAsFixed(2)}',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         );
       },
@@ -231,70 +235,39 @@ class TotalExpense extends StatelessWidget {
   }
 }
 
-class WeeklyExpensePage extends StatefulWidget {
+class WeeklyExpensePage extends StatelessWidget {
   final FirebaseFirestore firestore;
+  final String? userUID;
 
-  WeeklyExpensePage({
-    required this.firestore,
-  });
+  WeeklyExpensePage({required this.firestore, required this.userUID});
 
-  @override
-  _WeeklyExpensePageState createState() => _WeeklyExpensePageState();
-}
+  List<ExpenseData> _getWeeklyExpenseData(List<QueryDocumentSnapshot> expenseDocs) {
+    final Map<String, double> weeklyExpenseMap = {};
 
-class _WeeklyExpensePageState extends State<WeeklyExpensePage> {
-  late List<ExpenseData> chartData;
+    for (final doc in expenseDocs) {
+      final amount = doc['amount'] as double;
+      final date = (doc['date'] as Timestamp).toDate();
+      final weekNumber = DateFormat('ww').format(date);
+      final weekStartDate = DateTime.parse('${DateFormat('y-MM-dd').format(date)} 00:00:00');
+      final weekEndDate = weekStartDate.add(Duration(days: 7));
 
-  @override
-  void initState() {
-    super.initState();
-    chartData = [];
-    loadChartData();
-  }
-
-  void loadChartData() {
-    final DateTime now = DateTime.now();
-    final DateTime startDate = now.subtract(Duration(days: 6));
-    final DateTime endDate = now.add(Duration(days: 1));
-
-    final DateFormat formatter = DateFormat('yyyy-MM-dd');
-    final String startDateStr = formatter.format(startDate);
-    final String endDateStr = formatter.format(endDate);
-
-    widget.firestore
-        .collection('expenses')
-        .where('date', isGreaterThanOrEqualTo: startDateStr, isLessThan: endDateStr)
-        .get()
-        .then((QuerySnapshot snapshot) {
-      final data = snapshot.docs;
-      final Map<String, double> expenseMap = {};
-
-      for (var doc in data) {
-        final expense = doc.data() as Map<String, dynamic>;
-        final double amount = expense['amount'];
-        final String date = formatter.format(expense['date'].toDate());
-
-        if (expenseMap.containsKey(date)) {
-          expenseMap[date] = expenseMap[date]! + amount;
+      if (weekStartDate.isBefore(DateTime.now())) {
+        final weekRange = '${DateFormat('MMM d').format(weekStartDate)} - ${DateFormat('MMM d').format(weekEndDate)}';
+        if (weeklyExpenseMap.containsKey(weekRange)) {
+          weeklyExpenseMap[weekRange] = weeklyExpenseMap[weekRange]! + amount;
         } else {
-          expenseMap[date] = amount;
+          weeklyExpenseMap[weekRange] = amount;
         }
       }
+    }
 
-      final List<ExpenseData> chartDataList = [];
+    final List<ExpenseData> weeklyData = [];
 
-      for (var entry in expenseMap.entries) {
-        final DateTime date = formatter.parse(entry.key);
-        final double amount = entry.value;
-
-        final ExpenseData expenseData = ExpenseData(date, amount);
-        chartDataList.add(expenseData);
-      }
-
-      setState(() {
-        chartData = chartDataList;
-      });
+    weeklyExpenseMap.forEach((weekRange, amount) {
+      weeklyData.add(ExpenseData(weekRange, amount));
     });
+
+    return weeklyData;
   }
 
   @override
@@ -303,40 +276,46 @@ class _WeeklyExpensePageState extends State<WeeklyExpensePage> {
       appBar: AppBar(
         title: Text('Weekly Expense Report'),
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 20.0),
-          Text(
-            'Weekly Expense Chart',
-            style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
-          ),
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(10.0),
-              child: charts.TimeSeriesChart(
-                [
-                  charts.Series<ExpenseData, DateTime>(
-                    id: 'Expense',
-                    colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
-                    domainFn: (ExpenseData data, _) => data.date,
-                    measureFn: (ExpenseData data, _) => data.amount,
-                    data: chartData,
-                  ),
-                ],
-                animate: true,
-                dateTimeFactory: const charts.LocalDateTimeFactory(),
-              ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: firestore.collection('users').doc(userUID).collection('expenses').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          final expenseDocs = snapshot.data?.docs ?? [];
+          final weeklyData = _getWeeklyExpenseData(expenseDocs);
+
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: charts.BarChart(
+              [
+                charts.Series<ExpenseData, String>(
+                  id: 'WeeklyExpense',
+                  colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+                  domainFn: (ExpenseData expenseData, _) => expenseData.weekRange,
+                  measureFn: (ExpenseData expenseData, _) => expenseData.amount,
+                  data: weeklyData,
+                ),
+              ],
+              animate: true,
+              vertical: false,
+              behaviors: [charts.ChartTitle('Week Range', behaviorPosition: charts.BehaviorPosition.bottom, titleOutsideJustification: charts.OutsideJustification.middleDrawArea), charts.ChartTitle('Amount (\$)', behaviorPosition: charts.BehaviorPosition.start, titleOutsideJustification: charts.OutsideJustification.middleDrawArea)],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 }
 
 class ExpenseData {
-  final DateTime date;
+  final String weekRange;
   final double amount;
 
-  ExpenseData(this.date, this.amount);
+  ExpenseData(this.weekRange, this.amount);
 }
+
+

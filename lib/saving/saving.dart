@@ -1,6 +1,8 @@
-// ignore_for_file: prefer_const_constructors, unused_local_variable, library_private_types_in_public_api
+// ignore_for_file: prefer_const_constructors, library_private_types_in_public_api, avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SavingsPlanManagementPage extends StatefulWidget {
   const SavingsPlanManagementPage({Key? key}) : super(key: key);
@@ -11,6 +13,9 @@ class SavingsPlanManagementPage extends StatefulWidget {
 }
 
 class _SavingsPlanManagementPageState extends State<SavingsPlanManagementPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   TextEditingController goalController = TextEditingController();
   TextEditingController monthlyContributionController = TextEditingController();
   TextEditingController durationController = TextEditingController();
@@ -27,7 +32,7 @@ class _SavingsPlanManagementPageState extends State<SavingsPlanManagementPage> {
     super.dispose();
   }
 
-  void calculateTotalSavings() {
+  void calculateTotalSavings() async {
     double goalAmount = double.tryParse(goalController.text) ?? 0.0;
     double monthlyContribution =
         double.tryParse(monthlyContributionController.text) ?? 0.0;
@@ -45,19 +50,7 @@ class _SavingsPlanManagementPageState extends State<SavingsPlanManagementPage> {
       });
     } else {
       double requiredMonthlyContribution = remainingAmount / duration;
-      // Suggesting a bank based on the calculated required monthly contribution
-      String bank = '';
-      if (requiredMonthlyContribution >= 50000) {
-        bank = 'CRDB Bank';
-      } else if (requiredMonthlyContribution >= 30000) {
-        bank = 'NMB Bank';
-      } else if (requiredMonthlyContribution >= 10000) {
-        bank = 'Stanbic Bank';
-      } else {
-        bank = 'Exim Bank';
-      }
 
-      // Calculating savings for different durations
       double maxSavings = 0.0;
       int maxDuration = 0;
       for (int i = 1; i <= duration; i++) {
@@ -67,12 +60,40 @@ class _SavingsPlanManagementPageState extends State<SavingsPlanManagementPage> {
           maxDuration = i;
         }
       }
-
       setState(() {
         totalSavings = total;
         advisedMonthlyContribution = requiredMonthlyContribution;
         suggestedDuration = maxDuration;
       });
+
+      // Save the savings plan details to Firestore for the specific user
+      try {
+        final User? user = _auth.currentUser;
+        if (user != null) {
+          final userId = user.uid;
+          final userDocRef = _firestore.collection('users').doc(userId);
+
+          await userDocRef.set({
+            'goalAmount': goalAmount,
+            'monthlyContribution': monthlyContribution,
+            'duration': duration,
+            'totalSavings': totalSavings,
+            'advisedMonthlyContribution': advisedMonthlyContribution,
+            'suggestedDuration': suggestedDuration,
+          });
+
+          // Add a subcollection 'savings' under the user's document
+          final savingsCollectionRef = userDocRef.collection('savings');
+          await savingsCollectionRef.add({
+            'date': Timestamp.now(), // You can store the date of the savings transaction
+            'amount': totalSavings, // You can store the total savings amount
+          });
+
+          print('Savings plan details saved to Firestore.');
+        }
+      } catch (e) {
+        print('Error saving savings plan details: $e');
+      }
     }
   }
 
@@ -88,12 +109,12 @@ class _SavingsPlanManagementPageState extends State<SavingsPlanManagementPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-         Center(
+            Center(
               child: Text(
-              'Manage your savings plan',
-                   style: TextStyle(fontSize: 18.0),
-                  ),
-                ),
+                'Manage your savings plan',
+                style: TextStyle(fontSize: 18.0),
+              ),
+            ),
             SizedBox(height: 16.0),
             TextField(
               controller: goalController,
@@ -127,7 +148,10 @@ class _SavingsPlanManagementPageState extends State<SavingsPlanManagementPage> {
                   ),
                 ),
                 onPressed: calculateTotalSavings,
-                child: Text('Calculate Total Savings', style: TextStyle(),),
+                child: Text(
+                  'Calculate Total Savings',
+                  style: TextStyle(),
+                ),
               ),
             ),
             SizedBox(height: 16.0),
@@ -145,11 +169,6 @@ class _SavingsPlanManagementPageState extends State<SavingsPlanManagementPage> {
                 'To meet your goal amount, add ${advisedMonthlyContribution.toStringAsFixed(2)} Tshs per month.',
                 style: TextStyle(fontSize: 18.0, color: Colors.black45),
               ),
-            // if (suggestedDuration > 0)
-            //   Text(
-            //     'Suggested duration for maximum savings: $suggestedDuration months',
-            //     style: TextStyle(fontSize: 18.0),
-            //   ),
           ],
         ),
       ),

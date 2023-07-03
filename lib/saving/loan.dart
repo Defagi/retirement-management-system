@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // This feature streamlines loan tracking and management by enabling input of loan details, monitoring progress, calculating repayment schedules, and maintaining organization.
 class Loan {
@@ -38,38 +39,60 @@ class Loan {
 }
 
 class LoanManagementApp extends StatelessWidget {
-  final CollectionReference loanCollection =
-      FirebaseFirestore.instance.collection('loans');
+  final CollectionReference userCollection = FirebaseFirestore.instance.collection('users');
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Loan Management App',
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.orange,
-          title: Text('Loan Management'),
-        ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AddLoanForm(loanCollection: loanCollection),
-            SizedBox(height: 16.0),
-            Expanded(
-              child: LoanList(loanCollection: loanCollection),
-            ),
-          ],
-        ),
-      ),
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      // Handle the case where the user is not logged in or do something else
+      return Center(
+        child: Text('User not logged in'),
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: userCollection.doc(user.uid).snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        }
+
+        final userData = snapshot.data?.data() as Map<String, dynamic>?;
+
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.orange,
+            title: Text('Loan Management'),
+          ),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AddLoanForm(user: user, userData: userData, userCollection: userCollection,),
+              SizedBox(height: 16.0),
+              Expanded(
+                child: LoanList(user: user, userData: userData),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
 class AddLoanForm extends StatefulWidget {
-  final CollectionReference loanCollection;
+  final User user;
+  final Map<String, dynamic>? userData;
+   final CollectionReference userCollection;
 
-  AddLoanForm({required this.loanCollection});
+  AddLoanForm({required this.user, required this.userData, required this.userCollection});
+
 
   @override
   _AddLoanFormState createState() => _AddLoanFormState();
@@ -106,7 +129,8 @@ class _AddLoanFormState extends State<AddLoanForm> {
         amount: amount,
       );
 
-      await widget.loanCollection.doc(id).set(newLoan.toMap());
+      final loansCollection = widget.userCollection.doc(widget.user.uid).collection('loans');
+      await loansCollection.doc(id).set(newLoan.toMap());
     }
   }
 
@@ -160,18 +184,27 @@ class _AddLoanFormState extends State<AddLoanForm> {
 }
 
 class LoanList extends StatelessWidget {
-  final CollectionReference loanCollection;
+  final User user;
+  final Map<String, dynamic>? userData;
 
-  LoanList({required this.loanCollection});
+  LoanList({required this.user, required this.userData});
 
   Future<void> toggleLoanPayment(String id, bool newValue) async {
-    await loanCollection.doc(id).update({'isPaid': newValue});
+    final loansCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('loans');
+
+    await loansCollection.doc(id).update({'isPaid': newValue});
   }
 
   @override
   Widget build(BuildContext context) {
+    final loansCollection =
+        FirebaseFirestore.instance.collection('users').doc(user.uid).collection('loans');
+
     return StreamBuilder<QuerySnapshot>(
-      stream: loanCollection.snapshots(),
+      stream: loansCollection.snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
@@ -181,7 +214,8 @@ class LoanList extends StatelessWidget {
           return CircularProgressIndicator();
         }
 
-        List<Loan> loans = snapshot.data!.docs.map((doc) => Loan.fromFirestore(doc)).toList();
+        List<Loan> loans =
+            snapshot.data!.docs.map((doc) => Loan.fromFirestore(doc)).toList();
 
         if (loans.isEmpty) {
           return Center(

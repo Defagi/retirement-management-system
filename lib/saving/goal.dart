@@ -1,7 +1,9 @@
-// ignore_for_file: use_key_in_widget_constructors, library_private_types_in_public_api, prefer_const_constructors, sized_box_for_whitespace
+// ignore_for_file: prefer_const_constructors, library_private_types_in_public_api, unused_local_variable, use_build_context_synchronously, use_key_in_widget_constructors
 
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GoalData {
   final String goal;
@@ -11,7 +13,9 @@ class GoalData {
   final DateTime deadline;
   bool reached; // Added boolean field to track if the goal has been reached
 
-  GoalData(this.goal, this.targetAmount, this.progressAmount, this.completionTime, this.deadline, {this.reached = false});
+  GoalData(this.goal, this.targetAmount, this.progressAmount,
+      this.completionTime, this.deadline,
+      {this.reached = false});
 }
 
 class GoalTrackerScreen extends StatefulWidget {
@@ -25,11 +29,12 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _goalController = TextEditingController();
   final TextEditingController _targetAmountController = TextEditingController();
-  final TextEditingController _progressAmountController = TextEditingController();
+  final TextEditingController _progressAmountController =
+      TextEditingController();
   late DateTime _completionTime = DateTime.now();
   late DateTime _deadline = DateTime.now();
 
-  void _addGoal() {
+  void _addGoal() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -60,8 +65,26 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
       return;
     }
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final uid = user.uid;
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('goals')
+          .add({
+        'goal': goal,
+        'targetAmount': targetAmount,
+        'progressAmount': progressAmount,
+        'completionTime': _completionTime,
+        'deadline': _deadline,
+        'reached': false,
+      });
+    }
+
     setState(() {
-      goals.add(GoalData(goal, targetAmount, progressAmount, _completionTime, _deadline));
+      goals.add(GoalData(
+          goal, targetAmount, progressAmount, _completionTime, _deadline));
       _goalController.clear();
       _targetAmountController.clear();
       _progressAmountController.clear();
@@ -70,29 +93,49 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
     });
   }
 
-  void _viewGoals() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Goals'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: goals.map((goal) => _buildGoalCard(goal)).toList(),
+  void _viewGoals() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final uid = user.uid;
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('goals')
+          .get();
+      final goalList = snapshot.docs
+          .map((doc) => GoalData(
+                doc['goal'],
+                doc['targetAmount'],
+                doc['progressAmount'],
+                doc['completionTime'].toDate(),
+                doc['deadline'].toDate(),
+                reached: doc['reached'],
+              ))
+          .toList();
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Goals'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: goalList.map((goal) => _buildGoalCard(goal)).toList(),
+              ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   @override
@@ -125,7 +168,8 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                   TextFormField(
                     controller: _targetAmountController,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: 'Target Amount (Tshs)'),
+                    decoration:
+                        InputDecoration(labelText: 'Target Amount (Tshs)'),
                     validator: (value) {
                       if (value!.isEmpty) {
                         return 'Please enter a target amount.';
@@ -139,7 +183,8 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                   TextFormField(
                     controller: _progressAmountController,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: 'Progress Amount (Tshs)'),
+                    decoration:
+                        InputDecoration(labelText: 'Progress Amount (Tshs)'),
                     validator: (value) {
                       if (value!.isEmpty) {
                         return 'Please enter a progress amount.';
@@ -154,7 +199,8 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                   Text('Completion Time: ${_completionTime.toString()}'),
                   ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.orange),
                     ),
                     onPressed: () async {
                       final selectedTime = await showDatePicker(
@@ -175,7 +221,8 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                   Text('Deadline: ${_deadline.toString()}'),
                   ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.orange),
                     ),
                     onPressed: () async {
                       final selectedTime = await showDatePicker(
@@ -195,7 +242,8 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                   SizedBox(height: 10),
                   ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.orange),
                     ),
                     onPressed: _addGoal,
                     child: Text('Add Goal'),
@@ -213,15 +261,59 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
             ),
             SizedBox(height: 10),
             if (goals.isNotEmpty)
-              Column(
-                children: goals.map((goal) => _buildGoalCard(goal)).toList(),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: const <DataColumn>[
+                    DataColumn(
+                      label: Text('Goal'),
+                    ),
+                    DataColumn(
+                      label: Text('Target Amount'),
+                    ),
+                    DataColumn(
+                      label: Text('Progress Amount'),
+                    ),
+                    DataColumn(
+                      label: Text('Completion Time'),
+                    ),
+                    DataColumn(
+                      label: Text('Deadline'),
+                    ),
+                    DataColumn(
+                      label: Text('Reached'),
+                    ),
+                  ],
+                  rows: goals.map((goal) {
+                    return DataRow(
+                      cells: <DataCell>[
+                        DataCell(Text(goal.goal)),
+                        DataCell(Text(goal.targetAmount.toString())),
+                        DataCell(Text(goal.progressAmount.toString())),
+                        DataCell(Text(goal.completionTime.toString())),
+                        DataCell(Text(goal.deadline.toString())),
+                        DataCell(
+                          Checkbox(
+                            value: goal.reached,
+                            onChanged: (value) {
+                              setState(() {
+                                goal.reached = value!;
+                              });
+                              _updateGoal(goal);
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
               ),
-            SizedBox(height: 10),
-            if (goals.isNotEmpty) _buildGoalChart(),
-            SizedBox(height: 10),
+            if (goals.isEmpty) Text('No goals added yet.'),
+            SizedBox(height: 20),
             ElevatedButton(
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
+                backgroundColor:
+                    MaterialStateProperty.all<Color>(Colors.orange),
               ),
               onPressed: _viewGoals,
               child: Text('View Goals'),
@@ -234,53 +326,87 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
 
   Widget _buildGoalCard(GoalData goal) {
     return Card(
-      child: ListTile(
-        title: Text(goal.goal),
-        subtitle: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Target Amount: Tshs ${goal.targetAmount.toStringAsFixed(2)}'),
-            Text('Progress Amount: Tshs ${goal.progressAmount.toStringAsFixed(2)}'),
-            Text('Completion Time: ${goal.completionTime.toString()}'),
-            Text('Deadline: ${goal.deadline.toString()}'),
-            Checkbox(
-              value: goal.reached,
-              onChanged: (newValue) {
-                setState(() {
-                  goal.reached = newValue!;
-                });
-              },
-            ),
+            Text('Goal: ${goal.goal}'),
+            Text('Target Amount: ${goal.targetAmount} Tshs'),
+            Text('Progress Amount: ${goal.progressAmount} Tshs'),
+            Text('Completion Time: ${goal.completionTime}'),
+            Text('Deadline: ${goal.deadline}'),
+            Text('Reached: ${goal.reached ? "Yes" : "No"}'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildGoalChart() {
-    List<ChartData> chartData = goals.map((goal) {
-      return ChartData(goal.goal, goal.progressAmount);
-    }).toList();
-
-    return Container(
-      height: 300,
-      child: SfCartesianChart(
-        primaryXAxis: CategoryAxis(),
-        series: <ChartSeries>[
-          ColumnSeries<ChartData, String>(
-            dataSource: chartData,
-            xValueMapper: (ChartData data, _) => data.goal,
-            yValueMapper: (ChartData data, _) => data.progressAmount,
-          ),
-        ],
-      ),
-    );
+  void _updateGoal(GoalData goal) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final uid = user.uid;
+      final goalRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('goals')
+          .doc(goal.goal);
+      await goalRef.update({
+        'reached': goal.reached,
+      });
+    }
   }
 }
 
-class ChartData {
-  final String goal;
-  final double progressAmount;
+class ChartGPT extends StatefulWidget {
+  @override
+  _ChartGPTState createState() => _ChartGPTState();
+}
 
-  ChartData(this.goal, this.progressAmount);
+class _ChartGPTState extends State<ChartGPT> {
+  late List<GoalData> _chartData;
+  late String uid;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('goals')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return CircularProgressIndicator();
+        }
+
+        _chartData = snapshot.data!.docs
+            .map((doc) => GoalData(
+                  doc['goal'],
+                  doc['targetAmount'],
+                  doc['progressAmount'],
+                  doc['completionTime'].toDate(),
+                  doc['deadline'].toDate(),
+                  reached: doc['reached'],
+                ))
+            .toList();
+
+        return SfCircularChart(
+          title: ChartTitle(text: 'Goal Progress'),
+          legend: Legend(isVisible: true),
+          series: <CircularSeries>[
+            DoughnutSeries<GoalData, String>(
+              dataSource: _chartData,
+              xValueMapper: (GoalData data, _) => data.goal,
+              yValueMapper: (GoalData data, _) => data.progressAmount,
+              dataLabelMapper: (GoalData data, _) =>
+                  '${data.goal} - ${data.progressAmount}',
+              dataLabelSettings: DataLabelSettings(isVisible: true),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

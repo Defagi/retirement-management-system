@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, file_names, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, file_names, prefer_const_literals_to_create_immutables, unused_import
 
 import 'package:flutter/material.dart';
 import 'package:retirement_management_system/financial/reg2.dart';
@@ -47,28 +47,28 @@ class MyBody extends StatelessWidget {
             ),
           ),
           SizedBox(height: 45),
-          Center(
-            child: ElevatedButton(
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
-              ),
-              onPressed: () {
-                // Navigate to the investment options page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => InvestmentFirmListPage()),
-                );
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('View The Best Investment Options'),
-                  SizedBox(width: 8), // Adjust spacing between text and image
-                  Image.asset('assets/investment_icon.jpg', height: 24, width: 24),
-                ],
-              ),
-            ),
-          ),
+          // Center(
+          //   child: ElevatedButton(
+          //     style: ButtonStyle(
+          //       backgroundColor: MaterialStateProperty.all<Color>(Colors.orange),
+          //     ),
+          //     onPressed: () {
+          //       // Navigate to the investment options page
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(builder: (context) => InvestmentFirmListPage()),
+          //       );
+          //     },
+          //     child: Row(
+          //       mainAxisSize: MainAxisSize.min,
+          //       children: [
+          //         Text('View The Best Investment Options'),
+          //         SizedBox(width: 8), // Adjust spacing between text and image
+          //         Image.asset('assets/investment_icon.jpg', height: 24, width: 24),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           SizedBox(height: 45),
           Center(
             child: Column(
