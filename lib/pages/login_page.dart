@@ -4,7 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:retirement_management_system/common/theme_helper.dart';
-import 'package:retirement_management_system/widgets/home.dart';
+import 'package:retirement_management_system/pages/splash_user.dart';
 import 'forgot_password_page.dart';
 import 'registration_page.dart';
 
@@ -177,7 +177,7 @@ class _LoginPageState extends State<LoginPage> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              HomePageUser(),
+                                              SplashScreenPage(),
                                         ),
                                       );
                                       // Navigate to home page or any other screen
