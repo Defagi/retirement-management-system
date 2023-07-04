@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 // import 'package:retirement_management_system/data/service_rating.dart';
 import 'package:retirement_management_system/messages/ConversationScreen.dart';
-import 'package:retirement_management_system/messages/ConversationService.dart';
 import 'package:retirement_management_system/widgets/AppBarUser.dart';
 import 'package:retirement_management_system/pages/body.dart';
 import 'package:retirement_management_system/widgets/MyDrawer.dart';
@@ -16,8 +15,7 @@ class HomePageUser extends StatefulWidget {
 }
 
 class _HomePageUserState extends State<HomePageUser> {
-  final ConversationService _conversationService = ConversationService();
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,16 +31,14 @@ class _HomePageUserState extends State<HomePageUser> {
         child: FloatingActionButton(
           onPressed: () async {
             // Create a new conversation
-            final conversationId = await _conversationService.createConversation(['userId1', 'userId2']);
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ConversationScreen(conversationId: conversationId),
+                builder: (context) => ConversationScreen(),
               ),
             );
           },
           shape: RoundedRectangleBorder(
-            side: BorderSide(color: Colors.black),
             borderRadius: BorderRadius.circular(30),
           ),
           backgroundColor: Colors.orange,

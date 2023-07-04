@@ -1,9 +1,10 @@
-// ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, avoid_print, unused_local_variable
+// ignore_for_file: prefer_const_constructors, avoid_print, use_key_in_widget_constructors
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:retirement_management_system/financial/advisorstate.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 
 class AdvisorPage extends StatefulWidget {
   const AdvisorPage({Key? key});
@@ -12,8 +13,6 @@ class AdvisorPage extends StatefulWidget {
 }
 
 class _AdvisorPageState extends State<AdvisorPage> {
-
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -57,13 +56,29 @@ class _AdvisorPageState extends State<AdvisorPage> {
     }
   }
 
-  void navigateToAppointmentRecordsPage(String advisorId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AppointmentRecordsPage(advisorId: advisorId),
-      ),
-    );
+   Future<void> sendEmail(String advisorEmail) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      final userEmail = currentUser.email;
+
+      final smtpServer = gmail("edwardsasha27@gmail.com", "ngegeshi2000"); // Replace with your email and password
+
+      final message = Message()
+        ..from = Address(userEmail!) // Your email address
+        ..recipients.add(advisorEmail) // Advisor's email address
+        ..subject = "Appointment Request"
+        ..text = "You have a new appointment request from $userEmail.";
+
+      try {
+        final sendReport = await send(message, smtpServer);
+        print('Message sent: ${sendReport.toString()}');
+      } on MailerException catch (e) {
+        print('Message not sent. ${e.message}');
+        for (var p in e.problems) {
+          print('Problem: ${p.code}: ${p.msg}');
+        }
+      }
+    }
   }
 
   @override
@@ -123,9 +138,10 @@ class _AdvisorPageState extends State<AdvisorPage> {
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  Navigator.of(context).pop();
-                                  recordAppointment(advisorData?['advisorId']);
-                                  navigateToAppointmentRecordsPage(advisorData?['advisorId']);
+                                  // Navigator.of(context).pop();
+                                  // recordAppointment(advisorData?['advisorId']);
+                                  // navigateToAppointmentRecordsPage(advisorData?['advisorId']);
+                                  sendEmail(advisorEmail); // Send email when appointment is made
                                 },
                                 child: Text(
                                   'Ok',

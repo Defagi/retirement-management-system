@@ -17,26 +17,25 @@ class MyDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.white,
         child: SafeArea(
           child: Column(
             children: [
-              Container(
-
-                padding: const EdgeInsets.fromLTRB(20, 10, 0, 0),
-                width: 300,
-                height: 140,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: const [
-
-                    Text(
-                      "RETIREMENT MANAGEMENT SYSTEM",
-                      style: TextStyle(color: Colors.black, fontSize: 20),
-                    ),
-                  ],
-                ),
-              ),
+          Container(
+  padding: const EdgeInsets.fromLTRB(20, 10, 0, 0),
+  width: 300,
+  height: 140,
+  color: Colors.orange, // Replace Colors.blue with your desired background color
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.spaceAround,
+    children: const [
+      Text(
+        "RETIREMENT MANAGEMENT SYSTEM",
+        style: TextStyle(color: Colors.black, fontSize: 20),
+      ),
+    ],
+  ),
+        ),
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Row(
@@ -162,11 +161,11 @@ class MyDrawer extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.people,
+                      Icons.store,
                       size: 40,
                       color: Colors.black,
                     ),
-                                      Container(
+                    Container(
                       margin: const EdgeInsets.fromLTRB(14, 0, 0, 0),
                       child: Text.rich(TextSpan(children: [
                         TextSpan(text: "INVESTING FIRMS",

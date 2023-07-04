@@ -44,18 +44,22 @@ class AppBarUser extends StatelessWidget {
           actions: [
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: IconButton(
-              onPressed:() => {
-                  Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => GoalTrackerScreen()),
-            )
-              },
-              icon: const Icon(
-                Icons.logo_dev,
-                color: Colors.black,
-                size: 40,
-              )),
+         child: GestureDetector(
+       onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => GoalTrackerScreen()),
+    );
+  },
+  child: Text(
+    'GOAL',
+    style: TextStyle(
+      color: Colors.black, // Set the text color to blue, or any color you prefer
+      fontSize: 16, // Set the font size to your desired value
+      // decoration: TextDecoration.underline, // Add an underline to indicate it's clickable
+    ),
+  ),
+),
         )
       ],
     );
