@@ -1,7 +1,9 @@
 // ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, library_private_types_in_public_api, prefer_const_constructors_in_immutables
 
 import 'package:flutter/material.dart';
-import 'package:retirement_management_system/pages/investing.dart';
+import 'package:retirement_management_system/options/planPage.dart';
+
+
 
 class RetirementPlanPage extends StatefulWidget {
   @override
@@ -189,10 +191,10 @@ class _RetirementPlanResultPageState extends State<RetirementPlanResultPage> {
                 // Navigate to the investment options page
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => InvestmentFirmListPage()),
+                  MaterialPageRoute(builder: (context) => GoalScreen()),
                 );
               },
-              child: Text('View The Best Investment Options'),
+              child: Text('Creat your Plan'),
             ),
           ],
         ),

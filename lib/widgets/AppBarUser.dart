@@ -48,7 +48,7 @@ class AppBarUser extends StatelessWidget {
        onTap: () {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => GoalTrackerScreen()),
+      MaterialPageRoute(builder: (context) => GoalContributionScreen()),
     );
   },
   child: Text(

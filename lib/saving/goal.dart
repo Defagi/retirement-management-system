@@ -1,141 +1,159 @@
-// ignore_for_file: prefer_const_constructors, library_private_types_in_public_api, unused_local_variable, use_build_context_synchronously, use_key_in_widget_constructors
-
 import 'package:flutter/material.dart';
+import 'package:retirement_management_system/options/planPage.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_chart/fl_chart.dart'; // Import the fl_chart library
 
 class GoalData {
+  final String id;
+  final String userId;
   final String goal;
+  double progressAmount;
   final double targetAmount;
-  final double progressAmount;
-  final DateTime completionTime;
-  final DateTime deadline;
-  bool reached; // Added boolean field to track if the goal has been reached
+  DateTime? completionTime;
+  bool reached;
 
-  GoalData(this.goal, this.targetAmount, this.progressAmount,
-      this.completionTime, this.deadline,
-      {this.reached = false});
+  GoalData({
+    required this.id,
+    required this.userId,
+    required this.goal,
+    required this.progressAmount,
+    required this.targetAmount,
+    this.completionTime,
+    this.reached = false,
+  });
+
+  GoalData.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot)
+      : id = snapshot.id,
+        userId = snapshot.data()!['userId'],
+        goal = snapshot.data()!['goalName'],
+        progressAmount = snapshot.data()!['progressAmount'],
+        targetAmount = snapshot.data()!['targetAmount'],
+        completionTime = snapshot.data()!['completionTime'] != null
+            ? (snapshot.data()!['completionTime'] as Timestamp).toDate()
+            : null,
+        reached = snapshot.data()!['reached'] ?? false;
 }
 
-class GoalTrackerScreen extends StatefulWidget {
+class GoalContributionScreen extends StatefulWidget {
   @override
-  _GoalTrackerScreenState createState() => _GoalTrackerScreenState();
+  _GoalContributionScreenState createState() => _GoalContributionScreenState();
 }
 
-class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
+class _GoalContributionScreenState extends State<GoalContributionScreen> {
   final List<GoalData> goals = [];
+  TextEditingController _contributionController = TextEditingController();
+  GoalData? _selectedGoal;
 
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _goalController = TextEditingController();
-  final TextEditingController _targetAmountController = TextEditingController();
-  final TextEditingController _progressAmountController =
-      TextEditingController();
-  late DateTime _completionTime = DateTime.now();
-  late DateTime _deadline = DateTime.now();
+  @override
+  void dispose() {
+    _contributionController.dispose();
+    super.dispose();
+  }
 
-  void _addGoal() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    final goal = _goalController.text;
-    final targetAmount = double.parse(_targetAmountController.text);
-    final progressAmount = double.parse(_progressAmountController.text);
-
-    // Check if the goal already exists
-    if (goals.any((existingGoal) => existingGoal.goal == goal)) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Goal Already Exists'),
-            content: Text('The goal "$goal" is already available.'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-      return;
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
+  Future<void> _viewGoals() async {
+    User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final uid = user.uid;
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('goals')
-          .add({
-        'goal': goal,
-        'targetAmount': targetAmount,
-        'progressAmount': progressAmount,
-        'completionTime': _completionTime,
-        'deadline': _deadline,
-        'reached': false,
+      QuerySnapshot<Map<String, dynamic>> querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('goals')
+              .where('userId', isEqualTo: user.uid)
+              .get();
+      List<GoalData> userGoals = querySnapshot.docs
+          .map((doc) => GoalData.fromSnapshot(doc))
+          .toList();
+      setState(() {
+        goals.clear();
+        goals.addAll(userGoals);
       });
     }
+  }
 
-    setState(() {
-      goals.add(GoalData(
-          goal, targetAmount, progressAmount, _completionTime, _deadline));
-      _goalController.clear();
-      _targetAmountController.clear();
-      _progressAmountController.clear();
-      _completionTime = DateTime.now();
-      _deadline = DateTime.now();
+  Future<void> _updateGoal(GoalData goal) async {
+    await FirebaseFirestore.instance.collection('goals').doc(goal.id).update({
+      'progressAmount': goal.progressAmount,
+      'completionTime': goal.completionTime,
+      'reached': goal.reached,
     });
   }
 
-  void _viewGoals() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final uid = user.uid;
-      final snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('goals')
-          .get();
-      final goalList = snapshot.docs
-          .map((doc) => GoalData(
-                doc['goal'],
-                doc['targetAmount'],
-                doc['progressAmount'],
-                doc['completionTime'].toDate(),
-                doc['deadline'].toDate(),
-                reached: doc['reached'],
-              ))
-          .toList();
-
+  Future<void> _addContribution() async {
+    if (_selectedGoal == null) {
       showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Goals'),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: goalList.map((goal) => _buildGoalCard(goal)).toList(),
-              ),
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text('Please select a goal to add contribution.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
             ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Close'),
-              ),
-            ],
-          );
-        },
+          ],
+        ),
       );
+      return;
     }
+
+    double contribution = double.tryParse(_contributionController.text) ?? 0;
+    if (contribution <= 0) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text('Invalid contribution amount. Please enter a valid number greater than 0.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _selectedGoal!.progressAmount += contribution;
+      if (_selectedGoal!.progressAmount >= _selectedGoal!.targetAmount) {
+        _selectedGoal!.progressAmount = _selectedGoal!.targetAmount;
+        _selectedGoal!.reached = true;
+        _selectedGoal!.completionTime = DateTime.now();
+      }
+      _updateGoal(_selectedGoal!);
+    });
+
+    _contributionController.clear();
+  }
+
+  // Function to generate data for the pie chart
+  List<PieChartSectionData> getGoalChartData() {
+    List<PieChartSectionData> sections = [];
+    for (var goal in goals) {
+      if (goal.reached) {
+        sections.add(
+          PieChartSectionData(
+            title: goal.goal,
+            value: goal.targetAmount,
+            color: Colors.green,
+          ),
+        );
+      } else {
+        sections.add(
+          PieChartSectionData(
+            title: goal.goal,
+            value: goal.progressAmount,
+            color: Colors.blue,
+          ),
+        );
+      }
+    }
+    return sections;
   }
 
   @override
@@ -143,270 +161,68 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.orange,
-        title: Text('Goal Tracker'),
+        title: Text('Goal Contribution'),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: _goalController,
-                    decoration: InputDecoration(labelText: 'Goal'),
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return 'Please enter a goal.';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _targetAmountController,
-                    keyboardType: TextInputType.number,
-                    decoration:
-                        InputDecoration(labelText: 'Target Amount (Tshs)'),
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return 'Please enter a target amount.';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Please enter a valid target amount.';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _progressAmountController,
-                    keyboardType: TextInputType.number,
-                    decoration:
-                        InputDecoration(labelText: 'Progress Amount (Tshs)'),
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return 'Please enter a progress amount.';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Please enter a valid progress amount.';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 10),
-                  Text('Completion Time: ${_completionTime.toString()}'),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.orange),
-                    ),
-                    onPressed: () async {
-                      final selectedTime = await showDatePicker(
-                        context: context,
-                        initialDate: _completionTime,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (selectedTime != null) {
-                        setState(() {
-                          _completionTime = selectedTime;
-                        });
-                      }
-                    },
-                    child: Text('Select Completion Time'),
-                  ),
-                  SizedBox(height: 16),
-                  Text('Deadline: ${_deadline.toString()}'),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.orange),
-                    ),
-                    onPressed: () async {
-                      final selectedTime = await showDatePicker(
-                        context: context,
-                        initialDate: _deadline,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (selectedTime != null) {
-                        setState(() {
-                          _deadline = selectedTime;
-                        });
-                      }
-                    },
-                    child: Text('Select Deadline'),
-                  ),
-                  SizedBox(height: 10),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.orange),
-                    ),
-                    onPressed: _addGoal,
-                    child: Text('Add Goal'),
-                  ),
-                ],
+            // Select Goal Dropdown
+            Text('Select a goal to add contribution:'),
+            DropdownButton<GoalData>(
+              value: _selectedGoal,
+              onChanged: (GoalData? newValue) {
+                setState(() {
+                  _selectedGoal = newValue;
+                });
+              },
+              items: goals.map<DropdownMenuItem<GoalData>>((GoalData goal) {
+                return DropdownMenuItem<GoalData>(
+                  value: goal,
+                  child: Text(goal.goal),
+                );
+              }).toList(),
+            ),
+            SizedBox(height: 20),
+            // Contribution Input
+            Text('Enter contribution amount:'),
+            TextField(
+              controller: _contributionController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: 'Enter contribution',
               ),
             ),
             SizedBox(height: 20),
-            Text(
-              'Goals',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            // Add Contribution Button
+            ElevatedButton(
+              onPressed: _addContribution,
+              child: Text('Add Contribution'),
             ),
-            SizedBox(height: 10),
-            if (goals.isNotEmpty)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: const <DataColumn>[
-                    DataColumn(
-                      label: Text('Goal'),
-                    ),
-                    DataColumn(
-                      label: Text('Target Amount'),
-                    ),
-                    DataColumn(
-                      label: Text('Progress Amount'),
-                    ),
-                    DataColumn(
-                      label: Text('Completion Time'),
-                    ),
-                    DataColumn(
-                      label: Text('Deadline'),
-                    ),
-                    DataColumn(
-                      label: Text('Reached'),
-                    ),
-                  ],
-                  rows: goals.map((goal) {
-                    return DataRow(
-                      cells: <DataCell>[
-                        DataCell(Text(goal.goal)),
-                        DataCell(Text(goal.targetAmount.toString())),
-                        DataCell(Text(goal.progressAmount.toString())),
-                        DataCell(Text(goal.completionTime.toString())),
-                        DataCell(Text(goal.deadline.toString())),
-                        DataCell(
-                          Checkbox(
-                            value: goal.reached,
-                            onChanged: (value) {
-                              setState(() {
-                                goal.reached = value!;
-                              });
-                              _updateGoal(goal);
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+            SizedBox(height: 20),
+            // Display the pie chart
+            AspectRatio(
+              aspectRatio: 1,
+              child: PieChart(
+                PieChartData(
+                  sections: getGoalChartData(),
+                  // You can customize other chart properties here if needed
                 ),
               ),
-            if (goals.isEmpty) Text('No goals added yet.'),
+            ),
             SizedBox(height: 20),
-            ElevatedButton(
-              style: ButtonStyle(
-                backgroundColor:
-                    MaterialStateProperty.all<Color>(Colors.orange),
-              ),
-              onPressed: _viewGoals,
-              child: Text('View Goals'),
-            ),
+            // Display other goal-related information here
+            Text('Total Goals: ${goals.length}'),
+            // You can display other goal-related data as needed
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildGoalCard(GoalData goal) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Goal: ${goal.goal}'),
-            Text('Target Amount: ${goal.targetAmount} Tshs'),
-            Text('Progress Amount: ${goal.progressAmount} Tshs'),
-            Text('Completion Time: ${goal.completionTime}'),
-            Text('Deadline: ${goal.deadline}'),
-            Text('Reached: ${goal.reached ? "Yes" : "No"}'),
-          ],
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _viewGoals,
+        child: Icon(Icons.refresh),
+        backgroundColor: Colors.orange,
       ),
-    );
-  }
-
-  void _updateGoal(GoalData goal) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final uid = user.uid;
-      final goalRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('goals')
-          .doc(goal.goal);
-      await goalRef.update({
-        'reached': goal.reached,
-      });
-    }
-  }
-}
-
-class ChartGPT extends StatefulWidget {
-  @override
-  _ChartGPTState createState() => _ChartGPTState();
-}
-
-class _ChartGPTState extends State<ChartGPT> {
-  late List<GoalData> _chartData;
-  late String uid;
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('goals')
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return CircularProgressIndicator();
-        }
-
-        _chartData = snapshot.data!.docs
-            .map((doc) => GoalData(
-                  doc['goal'],
-                  doc['targetAmount'],
-                  doc['progressAmount'],
-                  doc['completionTime'].toDate(),
-                  doc['deadline'].toDate(),
-                  reached: doc['reached'],
-                ))
-            .toList();
-
-        return SfCircularChart(
-          title: ChartTitle(text: 'Goal Progress'),
-          legend: Legend(isVisible: true),
-          series: <CircularSeries>[
-            DoughnutSeries<GoalData, String>(
-              dataSource: _chartData,
-              xValueMapper: (GoalData data, _) => data.goal,
-              yValueMapper: (GoalData data, _) => data.progressAmount,
-              dataLabelMapper: (GoalData data, _) =>
-                  '${data.goal} - ${data.progressAmount}',
-              dataLabelSettings: DataLabelSettings(isVisible: true),
-            ),
-          ],
-        );
-      },
     );
   }
 }

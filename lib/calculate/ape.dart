@@ -121,7 +121,4 @@ class CalculateAPE {
   }
 }
 
-void main() {
-  CalculateAPE apeCalculator = CalculateAPE();
-  apeCalculator.processAPECalculation();
-}
+

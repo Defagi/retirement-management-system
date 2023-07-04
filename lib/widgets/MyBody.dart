@@ -193,7 +193,6 @@ class PageTransition extends StatelessWidget {
   final PageTransitionType animationType;
 
   PageTransition({required this.child, required this.animationType});
-
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
