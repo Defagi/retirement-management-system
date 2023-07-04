@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import, library_private_types_in_public_api, prefer_const_constructors, use_key_in_widget_constructors, prefer_final_fields, sort_child_properties_last
+
 import 'package:flutter/material.dart';
 import 'package:retirement_management_system/options/planPage.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -161,7 +163,7 @@ class _GoalContributionScreenState extends State<GoalContributionScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.orange,
-        title: Text('Goal Contribution'),
+        title: Text('Goal Progress'),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
