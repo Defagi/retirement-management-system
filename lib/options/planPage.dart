@@ -287,7 +287,6 @@ class _GoalScreenState extends State<GoalScreen> {
       ),
     );
   }
-
   Widget _buildGoalCard(GoalData goal) {
     return Card(
       child: Padding(
