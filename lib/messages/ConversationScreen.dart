@@ -95,7 +95,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Conversation'),
+        title: Text('Ask Us Anything'),
+        backgroundColor: Colors.orange,
       ),
       body: Column(
         children: [

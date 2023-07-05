@@ -89,6 +89,9 @@ class _GoalContributionScreenState extends State<GoalContributionScreen> {
           content: Text('Please select a goal to add contribution.'),
           actions: <Widget>[
             TextButton(
+                 style: ElevatedButton.styleFrom(
+               backgroundColor: Colors.orange,
+                ),
               onPressed: () {
                 Navigator.of(context).pop();
               },

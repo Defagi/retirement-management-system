@@ -11,7 +11,7 @@ class MyBody extends StatelessWidget {
       // Set the background image here
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage("assets/background_image.jpg"),
+          image: AssetImage("assets/assert.jpg"),
           fit: BoxFit.cover,
         ),
       ),
@@ -19,7 +19,7 @@ class MyBody extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(
-              height: 10,
+              height: 350,
             ),
             Center(
               child: Column(
@@ -148,9 +148,9 @@ class _SlidePageState extends State<SlidePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('About Us'),
-      ),
+      // appBar: AppBar(
+      //   title: Text('About Us'),
+      // ),
       body: PageView.builder(
         controller: _pageController,
         onPageChanged: (index) {

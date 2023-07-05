@@ -179,21 +179,7 @@ class _GoalScreenState extends State<GoalScreen> {
                       return null;
                     },
                   ),
-                  // TextFormField(
-                  //   controller: _progressAmountController,
-                  //   keyboardType: TextInputType.number,
-                  //   decoration:
-                  //       InputDecoration(labelText: 'Progress Amount (Tshs)'),
-                  //   validator: (value) {
-                  //     if (value!.isEmpty) {
-                  //       return 'Please enter a progress amount.';
-                  //     }
-                  //     if (double.tryParse(value) == null) {
-                  //       return 'Please enter a valid progress amount.';
-                  //     }
-                  //     return null;
-                  //   },
-                  // ),
+
                   SizedBox(height: 10),
                   Text('Completion Time: ${_completionTime.toString()}'),
                   ElevatedButton(
