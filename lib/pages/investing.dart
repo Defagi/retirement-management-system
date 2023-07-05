@@ -64,13 +64,15 @@ class _InvestmentFirmListPageState extends State<InvestmentFirmListPage> {
   InvestmentFirm('Yetu Microfinance Bank', 'https://www.yetumfb.co.tz/'),
   InvestmentFirm('Zan Securities', 'https://www.zansec.com/'),
 ];
-  List<InvestmentFirm> filteredFirms = [];
+ List<InvestmentFirm> filteredFirms = [];
+
   @override
   void initState() {
     super.initState();
     firms.sort((a, b) => a.name.compareTo(b.name));
     filteredFirms = List.from(firms);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,19 +104,22 @@ class _InvestmentFirmListPageState extends State<InvestmentFirmListPage> {
               itemCount: filteredFirms.length,
               itemBuilder: (context, index) {
                 InvestmentFirm firm = filteredFirms[index];
-                return ListTile(
-                  title: GestureDetector(
-                    child: Text(
-                      firm.name,
-                      style: TextStyle(
-                        color: Colors.black,
-                        decoration: TextDecoration.underline,
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: ListTile(
+                    title: GestureDetector(
+                      child: Text(
+                        firm.name,
+                        style: TextStyle(
+                          color: Colors.black,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
+                      onTap: () {
+                        // Open the website of the selected investment firm
+                        launchURL(firm.website);
+                      },
                     ),
-                    onTap: () {
-                      // Open the website of the selected investment firm
-                      launchURL(firm.website);
-                    },
                   ),
                 );
               },

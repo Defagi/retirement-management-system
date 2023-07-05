@@ -109,12 +109,12 @@ class _SavingsPlanManagementPageState extends State<SavingsPlanManagementPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Text(
-                'Manage your savings plan',
-                style: TextStyle(fontSize: 18.0),
-              ),
-            ),
+            // Center(
+            //   child: Text(
+            //     'Manage your savings plan',
+            //     style: TextStyle(fontSize: 18.0),
+            //   ),
+            // ),
             SizedBox(height: 16.0),
             TextField(
               controller: goalController,

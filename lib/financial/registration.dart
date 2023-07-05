@@ -122,7 +122,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                     child: Column(
                       children: [
                         SizedBox(
-                          height: 20,
+                          height: 15,
                         ),
                         Container(
                           child: TextFormField(
@@ -135,7 +135,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
                         SizedBox(
-                          height: 15,
+                          height: 10,
                         ),
                         Container(
                           child: TextFormField(
@@ -147,7 +147,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
-                        SizedBox(height: 15.0),
+                        SizedBox(height: 10.0),
                         Container(
                       child: TextFormField(
                         controller: _emailcontroller,
@@ -166,7 +166,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                       ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
-                        SizedBox(height: 15.0),
+                        SizedBox(height: 10.0),
                         Container(
                           child: TextFormField(
                             controller: _phonenumbercontroller,
@@ -187,7 +187,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
-                        SizedBox(height: 15.0),
+                        SizedBox(height: 10.0),
                     Container(
                       child: TextFormField(
                         controller: _passwordcontroller,
@@ -220,7 +220,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                       ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
-                        SizedBox(height: 15.0),
+                        SizedBox(height: 10.0),
                         Container(
                           child: TextFormField(
                             controller: _experiencecontroller,
@@ -238,7 +238,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
-                        SizedBox(height: 15, ),
+                        SizedBox(height: 10, ),
                         Container(
                           child: TextFormField(
                             controller: _certificationcontroller,
@@ -249,7 +249,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
-                        SizedBox(height: 15),
+                        SizedBox(height: 10),
                         Container(
                           child: TextFormField(
                             controller: _expertisecontroller,
@@ -260,7 +260,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
-                        SizedBox(height: 15.0),
+                        SizedBox(height: 10.0),
                         Container(
                           child: TextFormField(
                             readOnly: true, // Make the text field read-only
@@ -279,7 +279,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
                          SizedBox(
-                      height: 30,
+                      height: 20,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -369,8 +369,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
               ),
             ),
           ]
-          ),
-          
+          ),          
         ),
       );
     }

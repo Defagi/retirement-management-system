@@ -61,15 +61,16 @@ class _AdvisorWelcomePageState extends State<AdvisorWelcomePage> {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.orange,
-          title: Text('Advisor Welcome Page'),
+          title: Text('Congratulations, $advisorName!'),
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // _buildAdvisorImage(advisorData?['imageUrl'] ?? ''),
             SizedBox(height: 20),
+             Image.asset('assets/welcome_image.png'),
             Text(
-              'Congratulations, $advisorName!',
+              'Now wait for a client',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
