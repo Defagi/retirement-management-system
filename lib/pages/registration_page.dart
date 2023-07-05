@@ -96,7 +96,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       decoration: ThemeHelper().inputBoxDecorationShaddow(),
                     ),
                     SizedBox(
-                      height: 30,
+                      height: 15,
                     ),
                     Container(
                       child: TextFormField(
@@ -106,7 +106,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       ),
                       decoration: ThemeHelper().inputBoxDecorationShaddow(),
                     ),
-                    SizedBox(height: 20.0),
+                    SizedBox(height: 15.0),
                     Container(
                       child: TextFormField(
                         controller: _emailcontroller,
@@ -125,7 +125,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       ),
                       decoration: ThemeHelper().inputBoxDecorationShaddow(),
                     ),
-                    SizedBox(height: 20.0),
+                    SizedBox(height: 15.0),
                     Container(
                       child: TextFormField(
                         controller: _phonenumbercontroller,
@@ -145,7 +145,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       ),
                       decoration: ThemeHelper().inputBoxDecorationShaddow(),
                     ),
-                    SizedBox(height: 20.0),
+                    SizedBox(height: 15.0),
                     Container(
                       child: TextFormField(
                         controller: _passwordcontroller,

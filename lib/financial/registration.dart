@@ -124,7 +124,25 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                         SizedBox(
                           height: 15,
                         ),
-                        Container(
+                GestureDetector(
+                onTap: _pickImage,
+                      child: CircleAvatar(
+                       radius: 50,
+                       backgroundImage: _selectedImage != null ? FileImage(_selectedImage!) : null,
+                       child: _selectedImage == null
+                             ? Icon(Icons.person, size: 50)
+                               : null,
+                             ),
+                           ),
+                     SizedBox(height: 10),
+                         Text(
+                'Tap to add profile picture',
+                      style: TextStyle(
+                  fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                     ),
+                  ),
+               Container(
                           child: TextFormField(
                             controller: _firstnamecontroller,
                             decoration: ThemeHelper().textInputDecoration(
@@ -260,27 +278,7 @@ class _FinancialAdvisorRegistrationForm extends State<FinancialAdvisorRegistrati
                           ),
                           decoration: ThemeHelper().inputBoxDecorationShaddow(),
                         ),
-                        SizedBox(height: 10.0),
-                        Container(
-                          child: TextFormField(
-                            readOnly: true, // Make the text field read-only
-                            onTap: _pickImage, // Open the image picker on tap
-                            decoration: ThemeHelper().textInputDecoration(
-                              'Select Image', // Display "Select Image" as the hint text
-                              '',
-                            ),
-                            validator: (val) {
-                              if (_selectedImage == null) {
-                                return 'Please select an image';
-                              }
-                              return null;
-                            },
-                          ),
-                          decoration: ThemeHelper().inputBoxDecorationShaddow(),
-                        ),
-                         SizedBox(
-                      height: 20,
-                    ),
+                         SizedBox(height: 20, ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

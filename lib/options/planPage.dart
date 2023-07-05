@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, library_private_types_in_public_api, unused_local_variable, use_build_context_synchronously, use_key_in_widget_constructors, file_names
+// ignore_for_file: unused_local_variable, file_names, use_key_in_widget_constructors, library_private_types_in_public_api, prefer_const_constructors, use_build_context_synchronously, unused_element
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,7 +30,7 @@ class _GoalScreenState extends State<GoalScreen> {
   final TextEditingController _goalController = TextEditingController();
   final TextEditingController _targetAmountController = TextEditingController();
   final TextEditingController _progressAmountController =
-  TextEditingController();
+      TextEditingController();
   late DateTime _completionTime = DateTime.now();
   late DateTime _deadline = DateTime.now();
 
@@ -49,7 +49,7 @@ class _GoalScreenState extends State<GoalScreen> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Goal Already Exists'),
+            title: Text('Reach the goal, to add it again'),
             content: Text('The goal "$goal" is already available.'),
             actions: <Widget>[
               TextButton(
@@ -83,7 +83,7 @@ class _GoalScreenState extends State<GoalScreen> {
     }
 
     setState(() {
-      goals.add(GoalData(goal, targetAmount,progressAmount, _completionTime, _deadline));
+      goals.add(GoalData(goal, targetAmount, progressAmount, _completionTime, _deadline));
       _goalController.clear();
       _targetAmountController.clear();
       _progressAmountController.clear();
@@ -112,27 +112,11 @@ class _GoalScreenState extends State<GoalScreen> {
               ))
           .toList();
 
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Goals'),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: goalList.map((goal) => _buildGoalCard(goal)).toList(),
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Close'),
-              ),
-            ],
-          );
-        },
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => GoalListScreen(goals: goalList),
+        ),
       );
     }
   }
@@ -143,6 +127,12 @@ class _GoalScreenState extends State<GoalScreen> {
       appBar: AppBar(
         backgroundColor: Colors.orange,
         title: Text('Goal Tracker'),
+        actions: [
+          IconButton(
+            onPressed: _viewGoals,
+            icon: Icon(Icons.view_list),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -225,16 +215,17 @@ class _GoalScreenState extends State<GoalScreen> {
                     child: Text('Select Deadline'),
                   ),
                   SizedBox(height: 10),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.orange),
-                    ),
-                    onPressed: _addGoal,
-                    child: Text('Add Goal'),
-                  ),
                 ],
               ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor:
+                    MaterialStateProperty.all<Color>(Colors.orange),
+              ),
+              onPressed: _addGoal,
+              child: Text('Add Goal'),
             ),
             SizedBox(height: 20),
             Text(
@@ -256,9 +247,6 @@ class _GoalScreenState extends State<GoalScreen> {
                     DataColumn(
                       label: Text('Target Amount'),
                     ),
-                    // DataColumn(
-                    //   label: Text('Progress Amount'),
-                    // ),
                     DataColumn(
                       label: Text('Completion Time'),
                     ),
@@ -294,15 +282,6 @@ class _GoalScreenState extends State<GoalScreen> {
                 ),
               ),
             if (goals.isEmpty) Text('No goals added yet.'),
-            SizedBox(height: 20),
-            ElevatedButton(
-              style: ButtonStyle(
-                backgroundColor:
-                    MaterialStateProperty.all<Color>(Colors.orange),
-              ),
-              onPressed: _viewGoals,
-              child: Text('View Goals'),
-            ),
           ],
         ),
       ),
@@ -341,5 +320,57 @@ class _GoalScreenState extends State<GoalScreen> {
         'reached': goal.reached,
       });
     }
+  }
+}
+
+class GoalListScreen extends StatelessWidget {
+  final List<GoalData> goals;
+
+  const GoalListScreen({Key? key, required this.goals}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.orange,
+        title: Text('Goals'),
+      ),
+      body: AlertDialog(
+        title: Text('Goals'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: goals.map((goal) => _buildGoalCard(goal)).toList(),
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalCard(GoalData goal) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Goal: ${goal.goal}'),
+            Text('Target Amount: ${goal.targetAmount} Tshs'),
+            // Text('Progress Amount: ${goal.progressAmount} Tshs'),
+            Text('Completion Time: ${goal.completionTime}'),
+            Text('Deadline: ${goal.deadline}'),
+            Text('Reached: ${goal.reached ? "Yes" : "No"}'),
+          ],
+        ),
+      ),
+    );
   }
 }
