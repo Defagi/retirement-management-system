@@ -125,7 +125,7 @@ class _MonthsServedCalculatorState extends State<MonthsServedCalculator> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.orange,
-        title: Text('Know Your Pension'),
+        title: Text('Calculate Your Pension'),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(10.0),
@@ -233,7 +233,7 @@ class _MonthsServedCalculatorState extends State<MonthsServedCalculator> {
                   ),
                 );
               },
-              child: Text('Explore The Best Investment Options'),
+              child: Text('Plan More Your Retirement Life'),
             ),
           ],
         ),

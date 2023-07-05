@@ -13,10 +13,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   void _updateChat(String messageContent) {
     setState(() {
-      messages.add(messageContent);
+      messages.add("You: $messageContent");
+      String answer = generateAnswer(messageContent);
+      messages.add("Bot: $answer");
     });
   }
-
   String generateAnswer(String question) {
     String lowercaseQuestion = question.toLowerCase();
     if (lowercaseQuestion.contains("hello") ||
@@ -91,7 +92,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     }
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -117,9 +118,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
               onSubmitted: (value) {
                 String question = value.trim();
                 if (question.isNotEmpty) {
-                  _updateChat("You: " + question);
-                  String answer = generateAnswer(question);
-                  _updateChat("Bot: " + answer);
+                  _updateChat(question);
                   _messageController.clear();
                 }
               },
@@ -130,9 +129,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   onPressed: () {
                     String question = _messageController.text.trim();
                     if (question.isNotEmpty) {
-                      _updateChat("You: " + question);
-                      String answer = generateAnswer(question);
-                      _updateChat("Bot: " + answer);
+                      _updateChat(question);
                       _messageController.clear();
                     }
                   },

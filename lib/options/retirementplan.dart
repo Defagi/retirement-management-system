@@ -1,8 +1,8 @@
 // ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, library_private_types_in_public_api, prefer_const_constructors_in_immutables
 
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:retirement_management_system/options/planPage.dart';
-
 
 
 class RetirementPlanPage extends StatefulWidget {
@@ -77,6 +77,14 @@ class _RetirementPlanPageState extends State<RetirementPlanPage> {
                     income: income,
                     expectedMonthlyExpenses: expectedMonthlyExpenses,
                   );
+                      FirebaseFirestore.instance
+                      .collection('retirements')
+                      .add(retirementPlan.toMap())
+                      .then((value) {
+                    print('Retirement plan stored successfully');
+                  }).catchError((error) {
+                    print('Failed to store retirement plan: $error');
+                  });
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -100,12 +108,22 @@ class RetirementPlan {
   final int desiredRetirementAge;
   final double income;
   final double expectedMonthlyExpenses;
+
   RetirementPlan({
     required this.currentAge,
     required this.desiredRetirementAge,
     required this.income,
     required this.expectedMonthlyExpenses,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'currentAge': currentAge,
+      'desiredRetirementAge': desiredRetirementAge,
+      'income': income,
+      'expectedMonthlyExpenses': expectedMonthlyExpenses,
+    };
+  }
 }
 class RetirementPlanResultPage extends StatefulWidget {
   final RetirementPlan retirementPlan;
