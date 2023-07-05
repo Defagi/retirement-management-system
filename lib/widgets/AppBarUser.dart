@@ -55,7 +55,7 @@ class AppBarUser extends StatelessWidget {
     'GOAL',
     style: TextStyle(
       color: Colors.black, // Set the text color to blue, or any color you prefer
-      fontSize: 16, // Set the font size to your desired value
+      fontSize: 25, // Set the font size to your desired value
       // decoration: TextDecoration.underline, // Add an underline to indicate it's clickable
     ),
   ),

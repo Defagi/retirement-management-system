@@ -4,7 +4,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:retirement_management_system/calculate/pensioncalculate.dart';
 import 'package:retirement_management_system/expense/expense.dart';
+import 'package:retirement_management_system/options/planPage.dart';
 import 'package:retirement_management_system/pages/investing.dart';
+import 'package:retirement_management_system/saving/loan.dart';
 import 'package:retirement_management_system/saving/saving.dart';
 import 'package:retirement_management_system/widgets/home.dart';
 import '../pages/advisory.dart';
@@ -116,6 +118,66 @@ class MyDrawer extends StatelessWidget {
                                             MaterialPageRoute(
                                                 builder: (context) =>
                                                     ExpenseApp()));
+                                      },
+                                        style: TextStyle(
+                                      fontSize:15 , color: Colors.black),
+                                      )
+                      ])
+                      ),
+                    )
+                  ],
+                ),
+              ),
+                           Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.monetization_on,
+                      size: 40,
+                      color: Colors.black,
+                    ),
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(14, 0, 0, 0),
+                      child: Text.rich(TextSpan(children: [
+                        TextSpan(text: "LOAN",
+                        recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    LoanManagementApp()));
+                                      },
+                                        style: TextStyle(
+                                      fontSize:15 , color: Colors.black),
+                                      )
+                      ])
+                      ),
+                    )
+                  ],
+                ),
+              ),
+                           Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.monetization_on,
+                      size: 40,
+                      color: Colors.black,
+                    ),
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(14, 0, 0, 0),
+                      child: Text.rich(TextSpan(children: [
+                        TextSpan(text: "GOAL",
+                        recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    GoalScreen()));
                                       },
                                         style: TextStyle(
                                       fontSize:15 , color: Colors.black),

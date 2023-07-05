@@ -8,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class MyBodyUser extends StatelessWidget {
   const MyBodyUser({Key? key}) : super(key: key);
-
   String? _getUserUID() {
     final user = FirebaseAuth.instance.currentUser;
     return user?.uid;

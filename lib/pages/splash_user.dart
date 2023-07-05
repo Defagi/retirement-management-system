@@ -23,7 +23,7 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
       });
     });
 
-    new Timer(Duration(milliseconds: 50), () {
+    new Timer(Duration(milliseconds: 2000), () {
       setState(() {
         _isVisible = true;
       });
